@@ -47,7 +47,13 @@
     
     /* CHAT AREA */
     .chat-area { flex: 1; background: #0f172a; border-radius: 12px; display: flex; flex-direction: column; border: 1px solid #334155; position: relative; }
-    .chat-header { background: #1e293b; padding: 15px; border-bottom: 1px solid #334155; font-weight: bold; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; }
+    .chat-header { background: #1e293b; padding: 15px; border-bottom: 1px solid #334155; border-radius: 12px 12px 0 0; display: flex; flex-direction: column; gap: 5px; }
+    .chat-header-title { font-weight: bold; display: flex; justify-content: space-between; }
+    .chat-status-bar { font-size: 0.8rem; font-weight: 600; min-height: 15px; }
+    .status-online { color: #25D366; }
+    .status-offline { color: #94a3b8; }
+    .status-typing { color: #3b82f6; font-style: italic; }
+    
     #chatMessages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
     .msg { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; position: relative; }
     .msg-admin { background: #075E54; color: white; align-self: flex-end; border-bottom-right-radius: 0; }
@@ -93,7 +99,8 @@
 
         <div class="chat-area">
             <div class="chat-header" id="chatHeader">
-                <span><i class="fas fa-comments"></i> Select a key to start chat</span>
+                <div class="chat-header-title"><span><i class="fas fa-comments"></i> Select a key to start chat</span></div>
+                <div class="chat-status-bar" id="studentStatus"></div>
             </div>
             <div id="chatMessages">
                 <div class="empty-chat">
@@ -112,7 +119,7 @@
 <!-- Firebase Modular SDK -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getDatabase, ref, set, push, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+    import { getDatabase, ref, set, push, onValue, serverTimestamp, update, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBUPIULkKxZx0d7sX6kag2Fa-nmkgjnDA8",
@@ -127,8 +134,8 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     let currentKey = null;
+    let typingTimer;
 
-    // Phase 1 Login Logic (Retained)
     const ADMIN_PASSWORD = "Ankush@2026";
     document.getElementById("adminLoginBtn").addEventListener("click", tryLogin);
     document.getElementById("adminPassInput").addEventListener("keydown", (e) => { if (e.key === "Enter") tryLogin(); });
@@ -138,24 +145,26 @@
         if (document.getElementById("adminPassInput").value === ADMIN_PASSWORD) {
             document.getElementById("loginScreen").style.display = "none";
             document.getElementById("dashboard").style.display = "flex";
-            loadKeys(); // Fetch keys after login
+            loadKeys(); 
         } else {
             document.getElementById("loginErrorMsg").style.display = "block";
         }
     }
 
-    // Generate 6-Digit Key
     document.getElementById("generateKeyBtn").addEventListener("click", () => {
         let newKey = Math.floor(100000 + Math.random() * 900000).toString();
         set(ref(db, 'support_keys/' + newKey), {
             createdAt: serverTimestamp(),
-            status: 'active'
+            status: 'active',
+            admin_status: 'offline',
+            student_status: 'offline',
+            admin_typing: false,
+            student_typing: false
         }).then(() => {
             alert(`New Key Generated: ${newKey} \nWhatsApp/Call pe student ko ye key de do.`);
         });
     });
 
-    // Load Active Keys in Sidebar
     function loadKeys() {
         onValue(ref(db, 'support_keys'), (snapshot) => {
             const keysList = document.getElementById("keysList");
@@ -163,11 +172,12 @@
             const data = snapshot.val();
             
             if (data) {
-                // Sort keys roughly by making them an array
                 Object.keys(data).reverse().forEach(key => {
                     let div = document.createElement("div");
                     div.className = `key-item ${currentKey === key ? 'active' : ''}`;
-                    div.innerHTML = `<i class="fas fa-hashtag"></i> ${key}`;
+                    // Agar student online hai toh key ke aage green dot dikhao
+                    let statusDot = data[key].student_status === 'online' ? '<span style="color:#25D366; font-size:0.6rem; margin-left:5px;">🟢</span>' : '';
+                    div.innerHTML = `<i class="fas fa-hashtag"></i> ${key} ${statusDot}`;
                     div.onclick = () => openChat(key);
                     keysList.appendChild(div);
                 });
@@ -177,22 +187,29 @@
         });
     }
 
-    // Open Chat for a specific key
-    let chatListener = null;
     function openChat(key) {
+        // Purani chat band karte waqt khud ko offline mark karo
+        if(currentKey) {
+            update(ref(db, 'support_keys/' + currentKey), { admin_status: 'offline', admin_typing: false });
+        }
+
         currentKey = key;
-        document.getElementById("chatHeader").innerHTML = `<span><i class="fas fa-hashtag"></i> Key: ${key}</span>`;
+        document.querySelector(".chat-header-title").innerHTML = `<span><i class="fas fa-hashtag"></i> Key: ${key}</span>`;
         document.getElementById("chatInputArea").style.display = "flex";
         document.getElementById("adminMsgInput").focus();
         
-        // Update active class in sidebar
         document.querySelectorAll(".key-item").forEach(el => el.classList.remove("active"));
-        event.currentTarget.classList.add("active");
+        if(event) event.currentTarget.classList.add("active");
 
         const msgBox = document.getElementById("chatMessages");
-        msgBox.innerHTML = "";
+        const statusBox = document.getElementById("studentStatus");
 
-        // Listen for real-time messages
+        // Khud ko Online set karo aur disconnect hone par automatically Offline hone ka hook lagao
+        const myKeyRef = ref(db, 'support_keys/' + currentKey);
+        update(myKeyRef, { admin_status: 'online' });
+        onDisconnect(myKeyRef).update({ admin_status: 'offline', admin_typing: false });
+
+        // Listen for Realtime messages
         onValue(ref(db, 'messages/' + key), (snapshot) => {
             msgBox.innerHTML = "";
             const msgs = snapshot.val();
@@ -200,35 +217,54 @@
                 Object.values(msgs).forEach(m => {
                     let time = new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                     let isAdmin = m.sender === 'admin';
-                    msgBox.innerHTML += `
-                        <div class="msg ${isAdmin ? 'msg-admin' : 'msg-student'}">
-                            ${m.text}
-                            <span class="msg-time">${time}</span>
-                        </div>`;
+                    msgBox.innerHTML += `<div class="msg ${isAdmin ? 'msg-admin' : 'msg-student'}">${m.text}<span class="msg-time">${time}</span></div>`;
                 });
                 msgBox.scrollTop = msgBox.scrollHeight;
             } else {
                  msgBox.innerHTML = `<div class="empty-chat"><p>Abhi tak koi message nahi aaya.</p></div>`;
             }
         });
+
+        // Listen for Student Presence & Typing
+        onValue(ref(db, 'support_keys/' + key), (snapshot) => {
+            const data = snapshot.val();
+            if(data) {
+                if(data.student_typing) {
+                    statusBox.innerHTML = `<span class="status-typing">Student is typing... ✍️</span>`;
+                } else if(data.student_status === 'online') {
+                    statusBox.innerHTML = `<span class="status-online">Student is Online 🟢</span>`;
+                } else {
+                    statusBox.innerHTML = `<span class="status-offline">Student is Offline 🔴</span>`;
+                }
+            }
+        });
     }
 
-    // Send Message
     function sendMessage() {
         let input = document.getElementById("adminMsgInput");
         let text = input.value.trim();
         if (text !== "" && currentKey) {
-            push(ref(db, 'messages/' + currentKey), {
-                sender: 'admin',
-                text: text,
-                timestamp: Date.now() // Firebase serverTimestamp() can't be used instantly for local rendering tricks sometimes, Date.now() is safer for chat UI
-            });
+            push(ref(db, 'messages/' + currentKey), { sender: 'admin', text: text, timestamp: Date.now() });
             input.value = "";
+            update(ref(db, 'support_keys/' + currentKey), { admin_typing: false });
         }
     }
 
     document.getElementById("adminSendBtn").addEventListener("click", sendMessage);
-    document.getElementById("adminMsgInput").addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
+    document.getElementById("adminMsgInput").addEventListener("keydown", (e) => { 
+        if (e.key === "Enter") sendMessage(); 
+    });
+
+    // Admin Typing Indicator Logic
+    document.getElementById("adminMsgInput").addEventListener("input", () => {
+        if(currentKey) {
+            update(ref(db, 'support_keys/' + currentKey), { admin_typing: true });
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => {
+                update(ref(db, 'support_keys/' + currentKey), { admin_typing: false });
+            }, 1500);
+        }
+    });
 </script>
 </body>
 </html>
