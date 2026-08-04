@@ -6,7 +6,6 @@
     <title>Study Notes Manager | लाइव ऐप</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: linear-gradient(135deg, #fff3e0 0%, #ffe6c7 100%); min-height: 100vh; padding: 1.5rem 1rem; }
@@ -70,10 +69,10 @@
         .date-filter-box input[type="date"] { background: transparent; border: none; color: #10b981; font-weight: bold; outline: none; cursor: pointer; font-family: 'Inter'; font-size: 0.85rem;}
         .date-filter-box input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(1) sepia(1) saturate(5) hue-rotate(100deg); }
 
-        /* ========= 🆕 FIXED APP STYLE GRID & ICONS ========= */
+        /* ========= FIXED APP STYLE GRID & ICONS ========= */
         .subjects-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); /* फिक्स चौड़ाई */
+            grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
             gap: 1.2rem; 
             margin-bottom: 3rem; 
             justify-items: center; 
@@ -83,52 +82,13 @@
             .subjects-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; } 
         }
         
-        /* कार्ड की चौड़ाई एकदम फिक्स कर दी है ताकि आगे-पीछे न हों */
-        .subject-card { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 8px; 
-            cursor: pointer; 
-            transition: all 0.3s ease; 
-            width: 95px; 
-        }
+        .subject-card { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: all 0.3s ease; width: 95px; }
         .subject-card:hover { transform: translateY(-5px); }
         
-        /* आइकॉन का साइज़ छोटा कर दिया है (72px) */
-        .app-icon-box { 
-            width: 72px; 
-            height: 72px; 
-            border-radius: 20px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            font-size: 2.1rem; 
-            color: white; 
-            box-shadow: 0 8px 15px -4px rgba(0,0,0,0.35); 
-            position: relative; 
-        }
+        .app-icon-box { width: 72px; height: 72px; border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 2.1rem; color: white; box-shadow: 0 8px 15px -4px rgba(0,0,0,0.35); position: relative; }
 
-        /* नाम का साइज़ छोटा और ऊँचाई फिक्स कर दी है (Perfect Alignment) */
-        .subject-name { 
-            font-size: 0.75rem; 
-            font-weight: 700; 
-            color: #ffffff; 
-            background: #1e293b; 
-            padding: 5px 6px; 
-            border-radius: 8px; 
-            text-align: center; 
-            line-height: 1.2; 
-            word-break: break-word; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
-            width: 100%;
-            min-height: 32px; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        .subject-name { font-size: 0.75rem; font-weight: 700; color: #ffffff; background: #1e293b; padding: 5px 6px; border-radius: 8px; text-align: center; line-height: 1.2; word-break: break-word; box-shadow: 0 4px 6px rgba(0,0,0,0.15); width: 100%; min-height: 32px; display: flex; align-items: center; justify-content: center; }
 
-        /* 🆕 बैज को आइकॉन के साइज़ के हिसाब से छोटा और कोने में सेट कर दिया */
         .chapter-count-badge { position: absolute; top: -5px; right: -5px; background: #ef4444; padding: 3px 7px; font-weight: 900; font-size: 11px; border-radius: 12px; border: 2px solid #fff3e0; color: white; z-index: 10; line-height: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.3);}
         .lock-badge { position: absolute; bottom: -5px; left: -5px; background: #1e293b; padding: 4px; font-size: 10px; border-radius: 50%; color: #ffd966; border: 2px solid #fff3e0; line-height: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.3);}
 
@@ -136,20 +96,11 @@
         .master-chapters-section { background: #1e293b; padding: 1.6rem; margin-top: 1rem; border-radius: 8px; border-left: 6px solid #f97316; }
         .master-title { font-size: 1.5rem; font-weight: 700; color: #ffd966; margin-bottom: 1rem; border-left: 4px solid #f97316; padding-left: 1rem; }
         
-        .compact-list { 
-            display: flex; flex-direction: column; 
-            max-height: 380px; overflow-y: auto; scroll-behavior: auto; 
-            padding-right: 5px; position: relative;
-        }
+        .compact-list { display: flex; flex-direction: column; max-height: 380px; overflow-y: auto; scroll-behavior: auto; padding-right: 5px; position: relative; }
         .compact-list::-webkit-scrollbar { width: 6px; }
         .compact-list::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
 
-        .compact-chapter-item { 
-            background: #0f172a; padding: 0.8rem 1rem; display: flex; 
-            justify-content: space-between; align-items: center; 
-            gap: 12px; border: 1px solid #334155; border-left: 4px solid #f97316; border-radius: 6px; color: white; 
-            flex-shrink: 0; margin-bottom: 10px; width: 100%;
-        }
+        .compact-chapter-item { background: #0f172a; padding: 0.8rem 1rem; display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 1px solid #334155; border-left: 4px solid #f97316; border-radius: 6px; color: white; flex-shrink: 0; margin-bottom: 10px; width: 100%; }
         
         .compact-item-text { display: block; flex: 1; min-width: 0; line-height: 1.5; }
         .compact-badge { background: #ffedd5; padding: 3px 8px; font-weight: 700; color: #b45309; font-size: 0.75rem; border-radius: 4px; display: inline-block; vertical-align: middle; margin-right: 8px; margin-bottom: 2px;}
@@ -197,7 +148,7 @@
         .notif-item { background: #0f172a; padding: 10px; border-left: 3px solid #10b981; margin-bottom: 8px; border-radius: 4px; font-size: 0.9rem;}
         .notif-item span { font-size: 0.75rem; color: #94a3b8; display: block; margin-top: 4px;}
 
-        /* 🆕 QUICK DATE POPUP */
+        /* QUICK DATE POPUP */
         #quickDatePopup {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
             background: rgba(15, 23, 42, 0.95); padding: 20px 30px; border-radius: 12px;
@@ -212,7 +163,7 @@
         /* FOOTER WITH VISITOR BADGE STYLE */
         .site-footer { margin-top: 2rem; background: #0f172a; text-align: center; padding: 1.2rem 1rem; border-radius: 8px; color: #94a3b8; border-top: 2px solid #f97316; font-size: 0.85rem; }
 
-        /* ========= 🆕 LIVE SUPPORT WIDGET (Phase 1: UI only) ========= */
+        /* ========= LIVE SUPPORT WIDGET ========= */
         .livesupport-fab {
             position: fixed; bottom: 22px; right: 22px; width: 58px; height: 58px;
             border-radius: 50%; background: linear-gradient(145deg, #25D366, #1ebe57);
@@ -221,11 +172,6 @@
             z-index: 9000; transition: transform 0.2s;
         }
         .livesupport-fab:hover { transform: scale(1.08); }
-        .livesupport-fab .ls-fab-badge {
-            position: absolute; top: -4px; right: -4px; background: #ef4444; color: white;
-            font-size: 0.65rem; font-weight: bold; width: 18px; height: 18px; border-radius: 50%;
-            display: none; align-items: center; justify-content: center; border: 2px solid #128C7E;
-        }
         .livesupport-panel {
             position: fixed; bottom: 95px; right: 22px; width: 320px; max-width: calc(100vw - 40px);
             background: #1e293b; border-radius: 14px; box-shadow: 0 15px 40px rgba(0,0,0,0.45);
@@ -241,47 +187,16 @@
         .ls-panel-header i.ls-close { cursor: pointer; opacity: 0.85; font-size: 1.1rem; }
         .ls-panel-header i.ls-close:hover { opacity: 1; }
         .ls-panel-body { padding: 18px 16px; display: flex; flex-direction: column; gap: 12px; }
-        .ls-option-btn {
-            display: flex; align-items: center; gap: 12px; background: #334155; border: none; color: white;
-            padding: 12px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.92rem;
-            transition: 0.2s; width: 100%; text-align: left;
-        }
-        .ls-option-btn:hover { background: #3f4c63; transform: translateX(3px); }
-        .ls-option-btn i { font-size: 1.15rem; width: 24px; text-align: center; }
-        .ls-option-btn.ls-msg i { color: #25D366; }
-        .ls-option-btn.ls-voice i { color: #3b82f6; }
-        .ls-option-btn.ls-video i { color: #f97316; }
-        .ls-panel-empty { color: #94a3b8; text-align: center; padding: 20px 10px; font-size: 0.88rem; }
         @media (max-width: 480px) {
             .livesupport-panel { right: 14px; bottom: 88px; }
             .livesupport-fab { right: 14px; bottom: 16px; }
         }
 
-        /* ========= 🆕 LIVE SUPPORT CHAT WINDOW (Phase 2) ========= */
-        .ls-back-btn { cursor: pointer; opacity: 0.85; font-size: 1rem; margin-right: 6px; }
-        .ls-back-btn:hover { opacity: 1; }
-        .ls-chat-messages {
-            height: 320px; overflow-y: auto; padding: 14px 16px; display: flex;
-            flex-direction: column; gap: 8px; background: #0f172a;
-        }
-        .ls-msg-bubble {
-            max-width: 78%; padding: 8px 12px; border-radius: 10px; font-size: 0.88rem;
-            line-height: 1.35; word-break: break-word;
-        }
-        .ls-msg-bubble.student { align-self: flex-end; background: #25D366; color: #05230f; border-bottom-right-radius: 3px; }
-        .ls-msg-bubble.admin { align-self: flex-start; background: #334155; color: white; border-bottom-left-radius: 3px; }
-        .ls-msg-bubble.system { align-self: center; background: transparent; color: #94a3b8; font-size: 0.78rem; text-align: center; }
-        .ls-chat-input-row { display: flex; gap: 8px; padding: 12px 14px; background: #1e293b; border-top: 1px solid #334155; }
-        .ls-chat-input-row input {
-            flex: 1; background: #334155; border: none; border-radius: 20px; padding: 10px 14px;
-            color: white; outline: none; font-size: 0.88rem;
-        }
-        .ls-chat-input-row button {
-            background: #25D366; border: none; width: 40px; height: 40px; border-radius: 50%;
-            color: white; cursor: pointer; font-size: 0.95rem; flex-shrink: 0;
-        }
-        .ls-chat-input-row button:hover { background: #1ebe57; }
-        .ls-connecting { text-align: center; color: #94a3b8; padding: 40px 10px; font-size: 0.85rem; }
+        /* Chat Bubble Styles */
+        .chat-bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; font-size: 0.9rem; line-height: 1.3; }
+        .chat-bubble.admin { background: #334155; color: white; align-self: flex-start; border-bottom-left-radius: 0; }
+        .chat-bubble.student { background: #075E54; color: white; align-self: flex-end; border-bottom-right-radius: 0; }
+        .bubble-time { display: block; font-size: 0.65rem; color: #cbd5e1; text-align: right; margin-top: 3px; }
     </style>
 </head>
 <body>
@@ -501,24 +416,34 @@
     </div>
 </div>
 
-<!-- 🆕 LIVE SUPPORT WIDGET (Phase 1: UI only, student/visitor side) -->
+<!-- 🆕 LIVE SUPPORT WIDGET (Phase 2: Firebase Real-time Chat) -->
 <div class="livesupport-fab" id="lsFabBtn" title="Live Support">
     <i class="fas fa-headset"></i>
-    <span class="ls-fab-badge" id="lsFabBadge">0</span>
 </div>
 
-<div class="livesupport-panel" id="lsPanel">
+<div class="livesupport-panel" id="lsPanel" style="display: none;">
     <div class="ls-panel-header">
-        <h4 id="lsPanelTitle"><i class="fas fa-headset"></i> Live Support</h4>
-        <div>
-            <i class="fas fa-arrow-left ls-back-btn" id="lsBackBtn" style="display:none;"></i>
-            <i class="fas fa-times ls-close" id="lsCloseBtn"></i>
-        </div>
+        <h4><i class="fas fa-headset"></i> Live Support</h4>
+        <i class="fas fa-times ls-close" id="lsCloseBtn" style="cursor: pointer;"></i>
     </div>
-    <div class="ls-panel-body" id="lsPanelBody">
-        <button class="ls-option-btn ls-msg" id="lsMsgBtn"><i class="fas fa-comment-dots"></i> Message</button>
-        <button class="ls-option-btn ls-voice" id="lsVoiceBtn"><i class="fas fa-phone-alt"></i> Voice Call</button>
-        <button class="ls-option-btn ls-video" id="lsVideoBtn"><i class="fas fa-video"></i> Video Call</button>
+    
+    <!-- Step 1: Key Entry Box -->
+    <div class="ls-panel-body" id="lsKeyEntryArea">
+        <p style="color: #94a3b8; font-size: 0.85rem; text-align: center; margin-bottom: 15px;">Enter your 6-digit access key provided by Admin to start secure chat.</p>
+        <input type="text" id="studentKeyInput" placeholder="Enter 6-digit key" style="width: 100%; padding: 12px; background: #334155; border: none; border-radius: 8px; color: white; text-align: center; font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 15px; outline: none;" maxlength="6">
+        <button id="verifyKeyBtn" style="width: 100%; padding: 12px; background: #25D366; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer;">Start Chat</button>
+        <p id="keyErrorMsg" style="color: #ef4444; font-size: 0.8rem; text-align: center; margin-top: 10px; display: none;">Invalid Key! Check again.</p>
+    </div>
+
+    <!-- Step 2: Chat Interface (Hidden initially) -->
+    <div id="lsChatArea" style="display: none; flex-direction: column; height: 350px;">
+        <div id="studentChatMessages" style="flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #0f172a;">
+            <!-- Realtime messages load here -->
+        </div>
+        <div style="display: flex; gap: 8px; padding: 10px; background: #1e293b; border-top: 1px solid #334155;">
+            <input type="text" id="studentMsgInput" placeholder="Type a message..." style="flex: 1; padding: 10px 15px; border-radius: 20px; border: none; background: #334155; color: white; outline: none;">
+            <button id="studentSendBtn" style="background: #25D366; border: none; width: 40px; height: 40px; border-radius: 50%; color: white; cursor: pointer;"><i class="fas fa-paper-plane"></i></button>
+        </div>
     </div>
 </div>
 
@@ -864,42 +789,37 @@
         return { icon, btnText, btnIcon };
     }
 
-    // 🆕 19 Premium Gradients (Dynamic Color Generator)
     function getGradient(key, isLocked) {
-        if (isLocked) return "linear-gradient(135deg, #475569, #0f172a)"; // Slate for Locked
-        if (!key) return "linear-gradient(135deg, #1e3c72, #2a5298)"; // Fallback
+        if (isLocked) return "linear-gradient(135deg, #475569, #0f172a)"; 
+        if (!key) return "linear-gradient(135deg, #1e3c72, #2a5298)"; 
         
         const gradientList = [
-            "linear-gradient(135deg, #1e3c72, #2a5298)", // 0: Hindi
-            "linear-gradient(135deg, #0f5c3f, #1e8f5e)", // 1: Math
-            "linear-gradient(135deg, #b85c00, #f39c12)", // 2: GKGS
-            "linear-gradient(135deg, #6a1b9a, #9c27b0)", // 3: Reasoning
-            "linear-gradient(135deg, #b71c1c, #f44336)", // 4: CurrentAffairs
-            "linear-gradient(135deg, #00c6ff, #0072ff)", // 5: Blue
-            "linear-gradient(135deg, #10b981, #047857)", // 6: Emerald
-            "linear-gradient(135deg, #c2185b, #e91e63)", // 7: Pink
-            "linear-gradient(135deg, #6366f1, #4338ca)", // 8: Indigo
-            "linear-gradient(135deg, #f59e0b, #d97706)", // 9: Amber
-            "linear-gradient(135deg, #06b6d4, #0891b2)", // 10: Teal
-            "linear-gradient(135deg, #8b5cf6, #6d28d9)", // 11: Violet
-            "linear-gradient(135deg, #ec4899, #be185d)", // 12: Rose
-            "linear-gradient(135deg, #84cc16, #4d7c0f)", // 13: Lime
-            "linear-gradient(135deg, #14b8a6, #0f766e)", // 14: Dark Teal
-            "linear-gradient(135deg, #eab308, #ca8a04)", // 15: Yellow
-            "linear-gradient(135deg, #f43f5e, #e11d48)", // 16: Coral
-            "linear-gradient(135deg, #3b82f6, #1d4ed8)", // 17: Royal
-            "linear-gradient(135deg, #ea580c, #c2410c)"  // 18: Burnt Orange
+            "linear-gradient(135deg, #1e3c72, #2a5298)", 
+            "linear-gradient(135deg, #0f5c3f, #1e8f5e)", 
+            "linear-gradient(135deg, #b85c00, #f39c12)", 
+            "linear-gradient(135deg, #6a1b9a, #9c27b0)", 
+            "linear-gradient(135deg, #b71c1c, #f44336)", 
+            "linear-gradient(135deg, #00c6ff, #0072ff)", 
+            "linear-gradient(135deg, #10b981, #047857)", 
+            "linear-gradient(135deg, #c2185b, #e91e63)", 
+            "linear-gradient(135deg, #6366f1, #4338ca)", 
+            "linear-gradient(135deg, #f59e0b, #d97706)", 
+            "linear-gradient(135deg, #06b6d4, #0891b2)", 
+            "linear-gradient(135deg, #8b5cf6, #6d28d9)", 
+            "linear-gradient(135deg, #ec4899, #be185d)", 
+            "linear-gradient(135deg, #84cc16, #4d7c0f)", 
+            "linear-gradient(135deg, #14b8a6, #0f766e)", 
+            "linear-gradient(135deg, #eab308, #ca8a04)", 
+            "linear-gradient(135deg, #f43f5e, #e11d48)", 
+            "linear-gradient(135deg, #3b82f6, #1d4ed8)", 
+            "linear-gradient(135deg, #ea580c, #c2410c)"  
         ];
 
-        // Fixed defaults
         const def = { "Hindi": 0, "Math": 1, "GKGS": 2, "Reasoning": 3, "CurrentAffairs": 4 };
         if (def[key] !== undefined) return gradientList[def[key]];
         
-        // Hashing for custom folders so they always get a unique and consistent color
         let hash = 0;
-        for (let i = 0; i < key.length; i++) {
-            hash = key.charCodeAt(i) + ((hash << 5) - hash);
-        }
+        for (let i = 0; i < key.length; i++) { hash = key.charCodeAt(i) + ((hash << 5) - hash); }
         hash = Math.abs(hash);
         let index = 5 + (hash % (gradientList.length - 5));
         return gradientList[index];
@@ -932,8 +852,6 @@
             }
             
             let lockIcon = s.isLocked ? `<i class="fas fa-lock lock-badge"></i>` : '';
-            
-            // 🆕 Auto Gradient Apply
             let bgGradient = getGradient(s.key, s.isLocked);
             let borderStyle = s.isLocked ? "border: 2px solid #ef4444;" : "";
             
@@ -994,7 +912,6 @@
                 let h = "";
                 chapters.forEach(ch => { 
                     let display = getItemDisplayDetails(ch.itemType, contentType);
-                    
                     h += `<div class="chapter-link-card">
                         <div class="chapter-link-text">
                             <span style="display:inline-block; vertical-align:middle; margin-right:8px; font-size:1.1rem;">${display.icon}</span> 
@@ -1032,7 +949,6 @@
             let h = "";
             chapters.forEach(ch => { 
                 let display = getItemDisplayDetails(ch.itemType, contentType);
-                
                 h += `<div class="chapter-link-card">
                     <div class="chapter-link-text">
                         <span style="display:inline-block; vertical-align:middle; margin-right:8px; font-size:1.1rem;">${display.icon}</span> 
@@ -1059,13 +975,11 @@
         getAllSections().forEach(sec => {
             const secData = getSectionData(sec.key);
             if(secData.isLocked === true) return; 
-            
             if(secData.type === "normal") secData.data.forEach(ch => allGlobalItems.push({ ...ch, label: sec.key, sKey: sec.key, folderContentType: secData.contentType }));
             else for(let sub in secData.data) secData.data[sub].forEach(ch => allGlobalItems.push({ ...ch, label: `${sec.key} (${sub})`, sKey: sec.key, subName: sub, folderContentType: secData.contentType }));
         });
 
         let filteredItems = allGlobalItems;
-        
         if (dateQuery) {
             let selectedDateStr = new Date(dateQuery).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}); 
             filteredItems = filteredItems.filter(item => {
@@ -1094,7 +1008,6 @@
         let h = "";
         filteredItems.forEach(ch => {
             let display = getItemDisplayDetails(ch.itemType, ch.folderContentType);
-            
             h += `<div class="compact-chapter-item">
                     <div class="compact-item-text">
                         <span class="compact-badge">${display.icon} ${escapeHtml(ch.label)}</span> 
@@ -1110,7 +1023,6 @@
         
         if(searchQuery === "" && dateQuery === "" && filteredItems.length > 3) { container.innerHTML = `<div>${h}${h}</div>`; } 
         else { container.innerHTML = `<div>${h}</div>`; }
-        
         attachOpenButtons(container);
     }
 
@@ -1124,22 +1036,12 @@
                 let popup = document.getElementById("quickDatePopup");
                 document.getElementById("quickDatePopupText").innerText = formatTime(parseInt(ts));
                 popup.style.display = "block";
-                setTimeout(() => { 
-                    popup.style.opacity = "1"; 
-                    popup.style.transform = "translate(-50%, -50%) scale(1)"; 
-                }, 10);
-                
+                setTimeout(() => { popup.style.opacity = "1"; popup.style.transform = "translate(-50%, -50%) scale(1)"; }, 10);
                 setTimeout(() => {
-                    popup.style.opacity = "0";
-                    popup.style.transform = "translate(-50%, -50%) scale(0.8)";
-                    setTimeout(() => { 
-                        popup.style.display = "none"; 
-                        window.open(url, "_blank"); 
-                    }, 200);
+                    popup.style.opacity = "0"; popup.style.transform = "translate(-50%, -50%) scale(0.8)";
+                    setTimeout(() => { popup.style.display = "none"; window.open(url, "_blank"); }, 200);
                 }, 800);
-            } else {
-                window.open(url, "_blank"); 
-            }
+            } else { window.open(url, "_blank"); }
         })); 
     }
 
@@ -1157,8 +1059,7 @@
                 if(DEFAULT_SECTIONS.includes(secKey)) appData[secKey] = data; else appData.customSections[secKey].data = data; 
             } 
         }
-        await saveData(); fullRefresh();
-        showToast("Item Deleted", "info");
+        await saveData(); fullRefresh(); showToast("Item Deleted", "info");
         if (isPageActive === "subject") openSubject(currentOpenSubject, true);
         else if (isPageActive === "subSubject") openSubSubject(currentOpenSubject, currentOpenSubSubject, true);
     }
@@ -1167,84 +1068,48 @@
         let sec = document.getElementById("adminSubjectSelect").value; 
         let { type, data } = getSectionData(sec); 
         let subGroup = document.getElementById("gkSubSubjectGroup");
-        
         if(type === "nested") {
             subGroup.style.display = "block";
             let subSelect = document.getElementById("adminSubSubjectSelect");
             let subs = Object.keys(data || {});
-            
             let opts = `<option value="">-- पुराना फोल्डर चुनें --</option>`;
-            subs.forEach(s => {
-                opts += `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`;
-            });
+            subs.forEach(s => { opts += `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`; });
             opts += `<option value="__new__">➕ नया सब-फोल्डर बनाएं</option>`;
-            
-            subSelect.innerHTML = opts;
-            handleSubSelectChange();
-        } else {
-            subGroup.style.display = "none";
-        }
+            subSelect.innerHTML = opts; handleSubSelectChange();
+        } else { subGroup.style.display = "none"; }
     }
 
     function handleSubSelectChange() {
         let val = document.getElementById("adminSubSubjectSelect").value;
         let textInput = document.getElementById("gkSubSubjectName");
-        
-        if(val === "__new__") {
-            textInput.style.display = "block";
-            textInput.value = "";
-        } else {
-            textInput.style.display = "none";
-            textInput.value = val; 
-        }
+        if(val === "__new__") { textInput.style.display = "block"; textInput.value = ""; } 
+        else { textInput.style.display = "none"; textInput.value = val; }
     }
     
     document.getElementById("adminSubjectSelect").addEventListener("change", toggleGkField);
     document.getElementById("adminSubSubjectSelect").addEventListener("change", handleSubSelectChange);
 
     function startEdit(id, section, subName, name, url, itemType) {
-        editMode = true;
-        editItemDetails = { id: id, section: section, subName: subName }; 
-        
-        document.getElementById("adminSubjectSelect").value = section;
-        toggleGkField();
-        
-        if(subName) {
-            setTimeout(() => {
-                document.getElementById("adminSubSubjectSelect").value = subName;
-                handleSubSelectChange();
-            }, 120);
-        }
-        
-        document.getElementById("adminChapterName").value = name;
-        document.getElementById("adminPdfUrl").value = url;
-        document.getElementById("adminItemType").value = itemType || "default"; 
+        editMode = true; editItemDetails = { id: id, section: section, subName: subName }; 
+        document.getElementById("adminSubjectSelect").value = section; toggleGkField();
+        if(subName) { setTimeout(() => { document.getElementById("adminSubSubjectSelect").value = subName; handleSubSelectChange(); }, 120); }
+        document.getElementById("adminChapterName").value = name; document.getElementById("adminPdfUrl").value = url; document.getElementById("adminItemType").value = itemType || "default"; 
         
         let addBtn = document.getElementById("addChapterAdminBtn");
-        addBtn.innerHTML = `<i class="fas fa-save"></i> Update Data`;
-        addBtn.style.background = "#2563eb"; 
-        document.getElementById("cancelEditBtn").style.display = "block";
-        document.getElementById("adminFormTitle").innerHTML = `<i class="fas fa-edit"></i> Edit Data`;
-        
+        addBtn.innerHTML = `<i class="fas fa-save"></i> Update Data`; addBtn.style.background = "#2563eb"; 
+        document.getElementById("cancelEditBtn").style.display = "block"; document.getElementById("adminFormTitle").innerHTML = `<i class="fas fa-edit"></i> Edit Data`;
         document.getElementById("adminPanel").classList.add("show-admin");
-        window.location.hash = ""; 
-        setTimeout(() => window.scrollTo({ top: document.getElementById("adminPanel").offsetTop, behavior: 'smooth' }), 300);
+        window.location.hash = ""; setTimeout(() => window.scrollTo({ top: document.getElementById("adminPanel").offsetTop, behavior: 'smooth' }), 300);
     }
 
     document.getElementById("cancelEditBtn").addEventListener("click", resetEditMode);
 
     function resetEditMode() {
         editMode = false; editItemDetails = {};
-        document.getElementById("adminChapterName").value = "";
-        document.getElementById("adminPdfUrl").value = "";
-        document.getElementById("gkSubSubjectName").value = "";
-        document.getElementById("adminItemType").value = "default";
-        
+        document.getElementById("adminChapterName").value = ""; document.getElementById("adminPdfUrl").value = ""; document.getElementById("gkSubSubjectName").value = ""; document.getElementById("adminItemType").value = "default";
         let addBtn = document.getElementById("addChapterAdminBtn");
-        addBtn.innerHTML = `<i class="fas fa-plus"></i> Add Item`;
-        addBtn.style.background = "#f97316";
-        document.getElementById("cancelEditBtn").style.display = "none";
-        document.getElementById("adminFormTitle").innerHTML = `<i class="fas fa-plus-circle"></i> Add New Data`;
+        addBtn.innerHTML = `<i class="fas fa-plus"></i> Add Item`; addBtn.style.background = "#f97316";
+        document.getElementById("cancelEditBtn").style.display = "none"; document.getElementById("adminFormTitle").innerHTML = `<i class="fas fa-plus-circle"></i> Add New Data`;
     }
 
     let adminUnlockTargetKey = null;
@@ -1253,93 +1118,53 @@
         if(!isAdminLoggedIn) return;
         let secKey = document.getElementById("adminLockSelect").value;
         let pass = document.getElementById("adminLockPassword").value.trim();
-        
-        if(pass === "") {
-            showToast("Please enter a password to lock!", "error");
-            return;
-        }
-
+        if(pass === "") { showToast("Please enter a password to lock!", "error"); return; }
         if(!appData.customSections[secKey]) appData.customSections[secKey] = {};
-        appData.customSections[secKey].isLocked = true;
-        appData.customSections[secKey].password = btoa(pass); 
-        
-        showToast(`🔒 "${secKey}" Locked Successfully!`, "success");
-        await saveData(); fullRefresh();
-        document.getElementById("adminLockPassword").value = "";
+        appData.customSections[secKey].isLocked = true; appData.customSections[secKey].password = btoa(pass); 
+        showToast(`🔒 "${secKey}" Locked Successfully!`, "success"); await saveData(); fullRefresh(); document.getElementById("adminLockPassword").value = "";
     });
 
     document.getElementById("unlockFolderBtn").addEventListener("click", async () => {
         if(!isAdminLoggedIn) return;
         let secKey = document.getElementById("adminLockSelect").value;
-        
-        if(!appData.customSections[secKey] || !appData.customSections[secKey].isLocked) {
-            showToast(`"${secKey}" is already unlocked!`, "info");
-            return;
-        }
-
-        adminUnlockTargetKey = secKey;
-        document.getElementById("adminUnlockPassInput").value = "";
-        document.getElementById("adminUnlockModal").classList.add("active");
-        window.location.hash = "adminUnlock";
+        if(!appData.customSections[secKey] || !appData.customSections[secKey].isLocked) { showToast(`"${secKey}" is already unlocked!`, "info"); return; }
+        adminUnlockTargetKey = secKey; document.getElementById("adminUnlockPassInput").value = ""; document.getElementById("adminUnlockModal").classList.add("active"); window.location.hash = "adminUnlock";
     });
 
-    document.getElementById("cancelAdminUnlockBtn").addEventListener("click", () => {
-        history.back();
-    });
+    document.getElementById("cancelAdminUnlockBtn").addEventListener("click", () => { history.back(); });
 
     document.getElementById("submitAdminUnlockBtn").addEventListener("click", async () => {
         let pass = document.getElementById("adminUnlockPassInput").value;
         let secData = appData.customSections[adminUnlockTargetKey];
-
-        if (btoa(pass) !== secData.password) {
-            showToast("❌ Incorrect Password!", "error");
-            return;
-        }
-        
-        secData.isLocked = false;
-        secData.password = "";
-        
-        document.getElementById("adminUnlockModal").classList.remove("active");
-        history.replaceState(null, null, window.location.pathname); 
-        
-        showToast(`🔓 "${adminUnlockTargetKey}" Permanently Unlocked!`, "success");
-        await saveData(); fullRefresh();
+        if (btoa(pass) !== secData.password) { showToast("❌ Incorrect Password!", "error"); return; }
+        secData.isLocked = false; secData.password = "";
+        document.getElementById("adminUnlockModal").classList.remove("active"); history.replaceState(null, null, window.location.pathname); 
+        showToast(`🔓 "${adminUnlockTargetKey}" Permanently Unlocked!`, "success"); await saveData(); fullRefresh();
     });
 
     function updateAdminSelect() {
-        const sel = document.getElementById("adminSubjectSelect");
-        const lockSel = document.getElementById("adminLockSelect"); 
+        const sel = document.getElementById("adminSubjectSelect"); const lockSel = document.getElementById("adminLockSelect"); 
         let opts = ""; getAllSections().forEach(s => { opts += `<option value="${s.key}">${s.key}</option>`; });
-        sel.innerHTML = opts; 
-        lockSel.innerHTML = opts; 
-        toggleGkField();
+        sel.innerHTML = opts; lockSel.innerHTML = opts; toggleGkField();
     }
 
     document.getElementById("scanDriveBtn").addEventListener("click", async function() {
-        this.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Accessing & Scanning Drive Folder...`;
-        this.disabled = true;
+        this.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Accessing & Scanning Drive Folder...`; this.disabled = true;
         try {
             let res = await fetch(`${SCRIPT_URL}?action=scanLatestDriveFile`);
             let json = await res.json();
             if(json.success && json.file) {
-                document.getElementById("adminChapterName").value = json.file.name;
-                document.getElementById("adminPdfUrl").value = json.file.url;
+                document.getElementById("adminChapterName").value = json.file.name; document.getElementById("adminPdfUrl").value = json.file.url;
                 showToast("Latest File Auto-Filled! You can edit.", "success");
-            } else {
-                showToast("Drive Scan Failed: " + (json.error || "No files found"), "error");
-            }
-        } catch(e) {
-            showToast("Network Error connecting to cloud API!", "error");
-        }
-        this.innerHTML = `<i class="fas fa-cloud-download-alt"></i> Fetch Latest File from Drive`;
-        this.disabled = false;
+            } else { showToast("Drive Scan Failed: " + (json.error || "No files found"), "error"); }
+        } catch(e) { showToast("Network Error connecting to cloud API!", "error"); }
+        this.innerHTML = `<i class="fas fa-cloud-download-alt"></i> Fetch Latest File from Drive`; this.disabled = false;
     });
 
     async function addChapter() {
         if(!isAdminLoggedIn) return showToast("Please login first!", "error");
         let name = document.getElementById("adminChapterName").value.trim(), url = document.getElementById("adminPdfUrl").value.trim(), section = document.getElementById("adminSubjectSelect").value;
         let itemType = document.getElementById("adminItemType").value; 
-
         if(!name || !url) return showToast("Please fill all details!", "error");
         if(!url.startsWith("http")) url = "https://" + url;
         
@@ -1348,8 +1173,7 @@
         let timestamp = Date.now(); 
         
         if(editMode) {
-            let oldSec = editItemDetails.section;
-            let oldSub = editItemDetails.subName;
+            let oldSec = editItemDetails.section; let oldSub = editItemDetails.subName;
             let oldSecData = getSectionData(oldSec);
             let oldList = oldSecData.type === "nested" ? oldSecData.data[oldSub] : oldSecData.data;
 
@@ -1357,24 +1181,18 @@
                 let itemIndex = oldList.findIndex(i => i.id === editItemDetails.id);
                 if(itemIndex > -1) {
                     let itemToUpdate = oldList[itemIndex];
-                    itemToUpdate.name = name;
-                    itemToUpdate.url = url;
-                    itemToUpdate.itemType = itemType;
-                    
+                    itemToUpdate.name = name; itemToUpdate.url = url; itemToUpdate.itemType = itemType;
                     if(oldSec !== section || (type === "nested" && oldSub !== subN)) {
                         oldList.splice(itemIndex, 1); 
                         if(type === "nested") {
                             if(!subN) return showToast("Sub-Section Name Required!", "error");
                             if(!data[subN]) data[subN] = [];
                             data[subN].push(itemToUpdate);
-                        } else {
-                            data.push(itemToUpdate);
-                        }
+                        } else { data.push(itemToUpdate); }
                     }
                 }
             }
-            await saveData(); fullRefresh(); resetEditMode(); showToast("Updated Successfully!", "success");
-            return;
+            await saveData(); fullRefresh(); resetEditMode(); showToast("Updated Successfully!", "success"); return;
         }
 
         if(type === "nested") {
@@ -1388,11 +1206,7 @@
         }
         
         const secDataCheck = getSectionData(section);
-        if(!secDataCheck.isLocked) {
-            addNotification(section, name);
-            triggerNotificationAlert(); 
-        }
-
+        if(!secDataCheck.isLocked) { addNotification(section, name); triggerNotificationAlert(); }
         await saveData(); fullRefresh(); showToast("Saved Successfully!", "success");
         document.getElementById("adminChapterName").value = ""; document.getElementById("adminPdfUrl").value = ""; document.getElementById("gkSubSubjectName").value = "";
     }
@@ -1403,26 +1217,19 @@
         if(!name) return showToast("Name is required!", "error");
         if(DEFAULT_SECTIONS.includes(name) || appData.customSections[name]) return showToast("Folder already exists!", "error");
         
-        let type = document.getElementById("newSectionType").value;
-        let cType = document.getElementById("newSectionContentType").value; 
-        let cIcon = document.getElementById("newSectionIcon").value.trim(); 
-        let cPass = document.getElementById("newSectionPassword").value.trim(); 
-        
+        let type = document.getElementById("newSectionType").value; let cType = document.getElementById("newSectionContentType").value; 
+        let cIcon = document.getElementById("newSectionIcon").value.trim(); let cPass = document.getElementById("newSectionPassword").value.trim(); 
         let encodedPass = cPass !== "" ? btoa(cPass) : "";
 
         if(cIcon.includes("postimg.cc/") && !cIcon.includes("i.postimg.cc/")) {
-            let parts = cIcon.split("/");
-            let id = parts[parts.length-1];
+            let parts = cIcon.split("/"); let id = parts[parts.length-1];
             cIcon = `https://i.postimg.cc/${id}/${id}.png`; 
         }
         
         let newSecData = { type: type, contentType: cType, customIcon: cIcon, isLocked: encodedPass !== "", password: encodedPass, data: type==="normal"?[]:{} };
         appData.customSections[name] = newSecData;
-        
         await saveData(); fullRefresh(); 
-        document.getElementById("newSectionName").value = ""; 
-        document.getElementById("newSectionIcon").value = ""; 
-        document.getElementById("newSectionPassword").value = ""; 
+        document.getElementById("newSectionName").value = ""; document.getElementById("newSectionIcon").value = ""; document.getElementById("newSectionPassword").value = ""; 
         showToast(cPass ? `🔒 Private Folder Created!` : `Folder Created!`, "success");
     }
     
@@ -1438,10 +1245,8 @@
     }
     
     function fullRefresh() { 
-        renderHomeCards(); 
-        renderCompactMasterList(document.getElementById("globalSearchInput").value, document.getElementById("dateSearchInput").value); 
-        updateAdminSelect(); 
-        renderManageSections(); 
+        renderHomeCards(); renderCompactMasterList(document.getElementById("globalSearchInput").value, document.getElementById("dateSearchInput").value); 
+        updateAdminSelect(); renderManageSections(); 
         if(isAdminLoggedIn) document.getElementById("adminPanel").classList.add("show-admin"); else document.getElementById("adminPanel").classList.remove("show-admin"); 
     }
 
@@ -1455,160 +1260,102 @@
     
     document.getElementById("submitLoginBtn").addEventListener("click", () => {
         let u = document.getElementById("loginUserId").value.trim(), p = document.getElementById("loginPassword").value.trim();
-        if(btoa(u) === ENCODED_ID && btoa(p) === ENCODED_PW){ 
-            isAdminLoggedIn=true; history.back(); fullRefresh(); showToast("Login Successful!", "success"); clearLoginFields(); 
-        } else {
-            showToast("Incorrect ID or Password!", "error");
-        }
+        if(btoa(u) === ENCODED_ID && btoa(p) === ENCODED_PW){ isAdminLoggedIn=true; history.back(); fullRefresh(); showToast("Login Successful!", "success"); clearLoginFields(); } 
+        else { showToast("Incorrect ID or Password!", "error"); }
     });
     
     document.getElementById("logoutAdminBtn")?.addEventListener("click", () => { isAdminLoggedIn=false; fullRefresh(); showToast("Logged Out", "info"); clearLoginFields(); resetEditMode(); });
     
     window.addEventListener("hashchange", () => {
         let hash = window.location.hash;
-        
-        document.getElementById("subjectPage").classList.remove("active");
-        document.getElementById("subSubjectPage").classList.remove("active");
-        document.getElementById("loginModal").classList.remove("active");
-        document.getElementById("passwordModal").classList.remove("active");
-        document.getElementById("adminUnlockModal").classList.remove("active");
-        document.getElementById("notifModal").classList.remove("active");
+        document.getElementById("subjectPage").classList.remove("active"); document.getElementById("subSubjectPage").classList.remove("active");
+        document.getElementById("loginModal").classList.remove("active"); document.getElementById("passwordModal").classList.remove("active");
+        document.getElementById("adminUnlockModal").classList.remove("active"); document.getElementById("notifModal").classList.remove("active");
         
         if(hash === "") {
-            isPageActive = "home";
-            unlockedSession = {}; 
-            document.getElementById("dateSearchInput").value = "";
-            document.getElementById("clearDateBtn").style.display = "none";
-            renderCompactMasterList(document.getElementById("globalSearchInput").value, "");
-            checkUnreadNotifications(); 
-        } else if(hash === "#subject") {
-            document.getElementById("subjectPage").classList.add("active");
-            isPageActive = "subject";
-        } else if(hash === "#subsubject") {
-            document.getElementById("subSubjectPage").classList.add("active");
-            isPageActive = "subSubject";
-        } else if(hash === "#login") {
-            document.getElementById("loginModal").classList.add("active");
-        } else if(hash === "#password") {
-            document.getElementById("passwordModal").classList.add("active");
-        } else if(hash === "#adminUnlock") {
-            document.getElementById("adminUnlockModal").classList.add("active");
-        } else if(hash === "#notifications") {
-            document.getElementById("notifModal").classList.add("active");
-            checkUnreadNotifications();
-        }
+            isPageActive = "home"; unlockedSession = {}; document.getElementById("dateSearchInput").value = ""; document.getElementById("clearDateBtn").style.display = "none";
+            renderCompactMasterList(document.getElementById("globalSearchInput").value, ""); checkUnreadNotifications(); 
+        } else if(hash === "#subject") { document.getElementById("subjectPage").classList.add("active"); isPageActive = "subject";
+        } else if(hash === "#subsubject") { document.getElementById("subSubjectPage").classList.add("active"); isPageActive = "subSubject";
+        } else if(hash === "#login") { document.getElementById("loginModal").classList.add("active");
+        } else if(hash === "#password") { document.getElementById("passwordModal").classList.add("active");
+        } else if(hash === "#adminUnlock") { document.getElementById("adminUnlockModal").classList.add("active");
+        } else if(hash === "#notifications") { document.getElementById("notifModal").classList.add("active"); checkUnreadNotifications(); }
     });
 
     document.getElementById("closeLoginBtn").addEventListener("click", () => { history.back(); });
     document.getElementById("backHomeBtn").addEventListener("click", () => { history.back(); });
     document.getElementById("backToSubjectsBtn").addEventListener("click", () => { history.back(); });
-    
     document.getElementById("addChapterAdminBtn").addEventListener("click", addChapter);
     document.getElementById("createSectionBtn").addEventListener("click", createNewSection);
     
-    // ========= 🆕 LIVE SUPPORT WIDGET (Phase 2: real-time text chat) =========
-    const SOCKET_SERVER_URL = "https://livesupport-p9mo.onrender.com";
+    loadData(); 
+</script>
 
-    const lsFabBtn = document.getElementById("lsFabBtn");
-    const lsPanel = document.getElementById("lsPanel");
-    const lsPanelBody = document.getElementById("lsPanelBody");
-    const lsPanelTitle = document.getElementById("lsPanelTitle");
-    const lsCloseBtn = document.getElementById("lsCloseBtn");
-    const lsBackBtn = document.getElementById("lsBackBtn");
+<!-- 🆕 Firebase Live Support Logic -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getDatabase, ref, get, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-    let lsSocket = null;
-    let lsSessionId = null;
+    const firebaseConfig = {
+        apiKey: "AIzaSyBUPIULkKxZx0d7sX6kag2Fa-nmkgjnDA8",
+        authDomain: "livesupports-65142.firebaseapp.com",
+        databaseURL: "https://livesupports-65142-default-rtdb.firebaseio.com",
+        projectId: "livesupports-65142",
+        storageBucket: "livesupports-65142.firebasestorage.app",
+        messagingSenderId: "697418784895",
+        appId: "1:697418784895:web:c1f21e30d218a1cb3f9f4a"
+    };
 
-    function lsGenSessionId() {
-        return "S-" + Math.random().toString(36).substring(2, 8).toUpperCase() + Date.now().toString(36).slice(-3).toUpperCase();
-    }
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    let activeSessionKey = null;
 
-    function lsConnectSocket() {
-        if (lsSocket) return;
-        lsSocket = io(SOCKET_SERVER_URL);
-        lsSocket.on("chat_message", (data) => {
-            if (data.sessionId === lsSessionId && data.sender === "admin") {
-                lsAppendMessage(data.text, "admin");
+    document.getElementById("lsFabBtn").addEventListener("click", () => { document.getElementById("lsPanel").style.display = "block"; });
+    document.getElementById("lsCloseBtn").addEventListener("click", () => { document.getElementById("lsPanel").style.display = "none"; });
+
+    document.getElementById("verifyKeyBtn").addEventListener("click", async () => {
+        const key = document.getElementById("studentKeyInput").value.trim();
+        const errorMsg = document.getElementById("keyErrorMsg");
+        
+        if(key.length !== 6) { errorMsg.style.display = "block"; return; }
+
+        const snapshot = await get(ref(db, 'support_keys/' + key));
+        if (snapshot.exists() && snapshot.val().status === 'active') {
+            activeSessionKey = key;
+            document.getElementById("lsKeyEntryArea").style.display = "none";
+            document.getElementById("lsChatArea").style.display = "flex";
+            loadStudentChat(key);
+        } else { errorMsg.style.display = "block"; }
+    });
+
+    function loadStudentChat(key) {
+        const msgBox = document.getElementById("studentChatMessages");
+        onValue(ref(db, 'messages/' + key), (snapshot) => {
+            msgBox.innerHTML = "";
+            const msgs = snapshot.val();
+            if(msgs) {
+                Object.values(msgs).forEach(m => {
+                    let time = new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    let isStudent = m.sender === 'student';
+                    msgBox.innerHTML += `<div class="chat-bubble ${isStudent ? 'student' : 'admin'}">${m.text}<span class="bubble-time">${time}</span></div>`;
+                });
+                msgBox.scrollTop = msgBox.scrollHeight;
             }
         });
     }
 
-    function lsShowMenu() {
-        lsPanelTitle.innerHTML = `<i class="fas fa-headset"></i> Live Support`;
-        lsBackBtn.style.display = "none";
-        lsPanelBody.innerHTML = `
-            <button class="ls-option-btn ls-msg" id="lsMsgBtn"><i class="fas fa-comment-dots"></i> Message</button>
-            <button class="ls-option-btn ls-voice" id="lsVoiceBtn"><i class="fas fa-phone-alt"></i> Voice Call</button>
-            <button class="ls-option-btn ls-video" id="lsVideoBtn"><i class="fas fa-video"></i> Video Call</button>
-        `;
-        document.getElementById("lsMsgBtn").addEventListener("click", lsStartChat);
-        document.getElementById("lsVoiceBtn").addEventListener("click", () => showToast("Voice Call feature Phase 4 me active hoga!", "info"));
-        document.getElementById("lsVideoBtn").addEventListener("click", () => showToast("Video Call feature Phase 5 me active hoga!", "info"));
-    }
-
-    function lsStartChat() {
-        lsSessionId = lsGenSessionId();
-        lsConnectSocket();
-        lsSocket.emit("student_join", { sessionId: lsSessionId });
-
-        lsPanelTitle.innerHTML = `<i class="fas fa-comment-dots"></i> Live Chat`;
-        lsBackBtn.style.display = "inline-block";
-        lsPanelBody.innerHTML = `
-            <div class="ls-chat-messages" id="lsChatMessages">
-                <div class="ls-msg-bubble system">Aap Live Support se connect ho gaye hain</div>
-            </div>
-            <div class="ls-chat-input-row">
-                <input type="text" id="lsChatInput" placeholder="Apna message likhein...">
-                <button id="lsSendBtn"><i class="fas fa-paper-plane"></i></button>
-            </div>
-        `;
-        document.getElementById("lsSendBtn").addEventListener("click", lsSendMessage);
-        document.getElementById("lsChatInput").addEventListener("keydown", (e) => { if (e.key === "Enter") lsSendMessage(); });
-        document.getElementById("lsChatInput").focus();
-    }
-
-    function lsSendMessage() {
-        const input = document.getElementById("lsChatInput");
-        const text = input.value.trim();
-        if (!text || !lsSocket) return;
-        lsSocket.emit("student_message", { sessionId: lsSessionId, text });
-        lsAppendMessage(text, "student");
-        input.value = "";
-    }
-
-    function lsAppendMessage(text, sender) {
-        const container = document.getElementById("lsChatMessages");
-        if (!container) return;
-        const bubble = document.createElement("div");
-        bubble.className = `ls-msg-bubble ${sender}`;
-        bubble.textContent = text;
-        container.appendChild(bubble);
-        container.scrollTop = container.scrollHeight;
-    }
-
-    function lsEndChatIfActive() {
-        if (lsSocket && lsSessionId) {
-            lsSocket.emit("student_end_chat", { sessionId: lsSessionId });
-        }
-        lsSessionId = null;
-    }
-
-    function toggleLiveSupportPanel() {
-        const isOpen = lsPanel.classList.contains("open");
-        if (isOpen) {
-            lsPanel.classList.remove("open");
-        } else {
-            lsShowMenu();
-            lsPanel.classList.add("open");
+    function sendStudentMessage() {
+        let input = document.getElementById("studentMsgInput");
+        let text = input.value.trim();
+        if (text !== "" && activeSessionKey) {
+            push(ref(db, 'messages/' + activeSessionKey), { sender: 'student', text: text, timestamp: Date.now() });
+            input.value = "";
         }
     }
 
-    lsFabBtn.addEventListener("click", toggleLiveSupportPanel);
-    lsCloseBtn.addEventListener("click", () => lsPanel.classList.remove("open"));
-    lsBackBtn.addEventListener("click", () => { lsEndChatIfActive(); lsShowMenu(); });
-    // ========= END LIVE SUPPORT WIDGET (Phase 2) =========
-    
-    loadData(); 
+    document.getElementById("studentSendBtn").addEventListener("click", sendStudentMessage);
+    document.getElementById("studentMsgInput").addEventListener("keydown", (e) => { if (e.key === "Enter") sendStudentMessage(); });
 </script>
 </body>
 </html>
