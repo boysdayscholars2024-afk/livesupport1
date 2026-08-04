@@ -5,11 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Live Support | Admin Dashboard</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-    body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: white; }
+    body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); height: 100vh; color: white; overflow: hidden; }
 
     /* ===== LOGIN SCREEN ===== */
     #loginScreen {
@@ -24,85 +23,47 @@
     .login-box i.fa-headset { font-size: 2.6rem; color: #25D366; margin-bottom: 10px; }
     .login-box h2 { font-size: 1.3rem; margin-bottom: 6px; }
     .login-box p { color: #94a3b8; font-size: 0.85rem; margin-bottom: 20px; }
-    .login-box input {
-        width: 100%; padding: 12px; margin-bottom: 14px; background: #334155; border: none;
-        border-radius: 8px; color: white; outline: none; font-size: 0.95rem;
-    }
-    .login-box button {
-        width: 100%; padding: 12px; background: linear-gradient(145deg, #25D366, #1ebe57);
-        border: none; border-radius: 8px; color: white; font-weight: 800; cursor: pointer;
-        font-size: 0.95rem; transition: 0.2s;
-    }
+    .login-box input { width: 100%; padding: 12px; margin-bottom: 14px; background: #334155; border: none; border-radius: 8px; color: white; outline: none; }
+    .login-box button { width: 100%; padding: 12px; background: linear-gradient(145deg, #25D366, #1ebe57); border: none; border-radius: 8px; color: white; font-weight: 800; cursor: pointer; transition: 0.2s; }
     .login-box button:hover { transform: translateY(-2px); }
     .login-error { color: #ef4444; font-size: 0.82rem; margin-top: 10px; display: none; }
 
-    /* ===== DASHBOARD SHELL (Phase 1) ===== */
-    #dashboard { display: none; max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem; }
-    .dash-header {
-        display: flex; align-items: center; justify-content: space-between;
-        background: rgba(0,0,0,0.8); padding: 1.1rem 1.5rem; border-radius: 10px;
-        border-left: 6px solid #25D366; margin-bottom: 1.5rem;
-    }
-    .dash-header h1 { font-size: 1.3rem; display:flex; align-items:center; gap:10px; }
-    .dash-header h1 i { color: #25D366; }
-    #logoutBtn { background: #334155; border: none; color: white; padding: 8px 16px;
-        border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; }
-    #logoutBtn:hover { background: #475569; }
-
-    .status-strip { display: flex; gap: 12px; margin-bottom: 1.5rem; flex-wrap: wrap; }
-    .status-pill {
-        flex: 1; min-width: 140px; background: #1e293b; border-radius: 10px; padding: 14px 16px;
-        border: 1px solid #334155;
-    }
-    .status-pill .num { font-size: 1.5rem; font-weight: 800; }
-    .status-pill .label { color: #94a3b8; font-size: 0.8rem; }
-    .status-pill.online .num { color: #25D366; }
-
-    .requests-section { background: #1e293b; border-radius: 12px; padding: 1.3rem; border: 1px solid #334155; }
-    .requests-section h3 { font-size: 1rem; margin-bottom: 1rem; display:flex; align-items:center; gap:8px; }
-    .empty-state { text-align: center; padding: 3rem 1rem; color: #94a3b8; }
-    .empty-state i { font-size: 2.5rem; margin-bottom: 10px; display: block; color: #475569; }
-
-    /* ===== Session cards (Phase 2) ===== */
-    .session-card {
-        display: flex; align-items: center; justify-content: space-between; gap: 10px;
-        background: #0f172a; border: 1px solid #334155; border-radius: 10px;
-        padding: 12px 14px; margin-bottom: 10px; cursor: pointer; transition: 0.15s;
-    }
-    .session-card:hover { border-color: #25D366; }
-    .session-card .sc-info { flex: 1; min-width: 0; }
-    .session-card .sc-id { font-weight: 700; font-size: 0.88rem; }
-    .session-card .sc-preview { color: #94a3b8; font-size: 0.78rem; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .session-card .sc-unread {
-        background: #ef4444; color: white; font-size: 0.7rem; font-weight: 800; width: 20px; height: 20px;
-        border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-
-    /* ===== Chat overlay (Phase 2) ===== */
-    #adminChatOverlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 200;
-    }
-    #adminChatOverlay.open { display: flex; }
-    .achat-box { width: 380px; max-width: calc(100vw - 30px); height: 520px; max-height: calc(100vh - 40px);
-        background: #1e293b; border-radius: 14px; display: flex; flex-direction: column; overflow: hidden;
-        border: 1px solid #334155; }
-    .achat-header { background: linear-gradient(135deg, #128C7E, #075E54); padding: 14px 16px;
-        display: flex; align-items: center; justify-content: space-between; color: white; }
-    .achat-header h4 { font-size: 0.95rem; }
-    .achat-header i { cursor: pointer; }
-    .achat-messages { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; background: #0f172a; }
-    .achat-bubble { max-width: 78%; padding: 8px 12px; border-radius: 10px; font-size: 0.88rem; line-height: 1.35; word-break: break-word; }
-    .achat-bubble.student { align-self: flex-start; background: #334155; color: white; border-bottom-left-radius: 3px; }
-    .achat-bubble.admin { align-self: flex-end; background: #25D366; color: #05230f; border-bottom-right-radius: 3px; }
-    .achat-input-row { display: flex; gap: 8px; padding: 12px 14px; background: #1e293b; border-top: 1px solid #334155; }
-    .achat-input-row input { flex: 1; background: #334155; border: none; border-radius: 20px; padding: 10px 14px; color: white; outline: none; font-size: 0.88rem; }
-    .achat-input-row button { background: #25D366; border: none; width: 40px; height: 40px; border-radius: 50%; color: white; cursor: pointer; flex-shrink: 0; }
+    /* ===== DASHBOARD WORKSPACE ===== */
+    #dashboard { display: none; height: 100vh; padding: 1rem; flex-direction: column; max-width: 1200px; margin: 0 auto; }
+    .dash-header { display: flex; justify-content: space-between; background: rgba(0,0,0,0.5); padding: 1rem 1.5rem; border-radius: 10px; border-left: 6px solid #25D366; margin-bottom: 1rem; flex-shrink: 0; }
+    .dash-header h1 { font-size: 1.2rem; display:flex; align-items:center; gap:10px; }
+    
+    .workspace { display: flex; gap: 15px; flex: 1; min-height: 0; }
+    
+    /* SIDEBAR: KEYS LIST */
+    .sidebar { width: 300px; background: #1e293b; border-radius: 12px; display: flex; flex-direction: column; border: 1px solid #334155; flex-shrink: 0; }
+    .sidebar-header { padding: 15px; border-bottom: 1px solid #334155; text-align: center; }
+    .generate-btn { width: 100%; background: #25D366; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .generate-btn:hover { background: #1ebe57; }
+    #keysList { flex: 1; overflow-y: auto; padding: 10px; }
+    .key-item { background: #334155; padding: 12px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #94a3b8; transition: 0.2s; }
+    .key-item:hover { background: #475569; color: white; }
+    .key-item.active { background: #075E54; color: white; border-left: 4px solid #25D366; }
+    
+    /* CHAT AREA */
+    .chat-area { flex: 1; background: #0f172a; border-radius: 12px; display: flex; flex-direction: column; border: 1px solid #334155; position: relative; }
+    .chat-header { background: #1e293b; padding: 15px; border-bottom: 1px solid #334155; font-weight: bold; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; }
+    #chatMessages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .msg { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; position: relative; }
+    .msg-admin { background: #075E54; color: white; align-self: flex-end; border-bottom-right-radius: 0; }
+    .msg-student { background: #334155; color: white; align-self: flex-start; border-bottom-left-radius: 0; }
+    .msg-time { display: block; font-size: 0.65rem; color: #cbd5e1; text-align: right; margin-top: 4px; }
+    
+    .chat-input-box { display: flex; gap: 10px; padding: 15px; background: #1e293b; border-top: 1px solid #334155; border-radius: 0 0 12px 12px; }
+    .chat-input-box input { flex: 1; background: #334155; border: none; padding: 12px 15px; border-radius: 25px; color: white; outline: none; }
+    .chat-input-box button { background: #25D366; border: none; width: 45px; height: 45px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    
+    .empty-chat { flex:1; display:flex; align-items:center; justify-content:center; color: #94a3b8; flex-direction: column; gap: 15px; }
+    .empty-chat i { font-size: 3rem; opacity: 0.5; }
 </style>
 </head>
 <body>
 
-<!-- ===== LOGIN SCREEN ===== -->
 <div id="loginScreen">
     <div class="login-box">
         <i class="fas fa-headset"></i>
@@ -114,207 +75,160 @@
     </div>
 </div>
 
-<!-- ===== DASHBOARD (Phase 1: shell only) ===== -->
 <div id="dashboard">
     <div class="dash-header">
-        <h1><i class="fas fa-headset"></i> Live Support Dashboard</h1>
-        <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        <h1><i class="fas fa-headset"></i> Support Desk (Admin)</h1>
+        <button id="logoutBtn" style="background:#334155; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer;"><i class="fas fa-sign-out-alt"></i> Logout</button>
     </div>
 
-    <div class="status-strip">
-        <div class="status-pill online"><div class="num" id="statOnline">🟢</div><div class="label">Server Status</div></div>
-        <div class="status-pill"><div class="num" id="statRequests">0</div><div class="label">Active Requests</div></div>
-        <div class="status-pill"><div class="num" id="statWaiting">0</div><div class="label">Waiting</div></div>
-    </div>
+    <div class="workspace">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <button class="generate-btn" id="generateKeyBtn"><i class="fas fa-key"></i> Generate 6-Digit Key</button>
+            </div>
+            <div id="keysList">
+                <!-- Keys will load here via Firebase -->
+            </div>
+        </div>
 
-    <div class="requests-section">
-        <h3><i class="fas fa-inbox"></i> Incoming Requests</h3>
-        <div id="requestsList">
-            <div class="empty-state">
-                <i class="fas fa-inbox"></i>
-                Abhi koi active chat/call request nahi hai.<br>
-                <small>Koi student "Message" bhejega to yahan turant dikhega</small>
+        <div class="chat-area">
+            <div class="chat-header" id="chatHeader">
+                <span><i class="fas fa-comments"></i> Select a key to start chat</span>
+            </div>
+            <div id="chatMessages">
+                <div class="empty-chat">
+                    <i class="fas fa-inbox"></i>
+                    <p>Koi chat select nahi ki gayi hai.</p>
+                </div>
+            </div>
+            <div class="chat-input-box" style="display: none;" id="chatInputArea">
+                <input type="text" id="adminMsgInput" placeholder="Type a message (Offline students will see this later)..." autocomplete="off">
+                <button id="adminSendBtn"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ===== Chat Overlay (Phase 2) ===== -->
-<div id="adminChatOverlay">
-    <div class="achat-box">
-        <div class="achat-header">
-            <h4 id="achatSessionTitle"><i class="fas fa-comment-dots"></i> Session</h4>
-            <i class="fas fa-times" id="achatCloseBtn"></i>
-        </div>
-        <div class="achat-messages" id="achatMessages"></div>
-        <div class="achat-input-row">
-            <input type="text" id="achatInput" placeholder="Reply likhein...">
-            <button id="achatSendBtn"><i class="fas fa-paper-plane"></i></button>
-        </div>
-    </div>
-</div>
+<!-- Firebase Modular SDK -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getDatabase, ref, set, push, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-<script>
-    // ===== Phase 1: simple password gate (client-side, session-only, no persistence) =====
-    // 👉 Password change karna ho to sirf yahan neeche wali line edit karo:
+    const firebaseConfig = {
+        apiKey: "AIzaSyBUPIULkKxZx0d7sX6kag2Fa-nmkgjnDA8",
+        authDomain: "livesupports-65142.firebaseapp.com",
+        databaseURL: "https://livesupports-65142-default-rtdb.firebaseio.com",
+        projectId: "livesupports-65142",
+        storageBucket: "livesupports-65142.firebasestorage.app",
+        messagingSenderId: "697418784895",
+        appId: "1:697418784895:web:c1f21e30d218a1cb3f9f4a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    let currentKey = null;
+
+    // Phase 1 Login Logic (Retained)
     const ADMIN_PASSWORD = "Ankush@2026";
-
-    const loginScreen = document.getElementById("loginScreen");
-    const dashboard = document.getElementById("dashboard");
-    const adminPassInput = document.getElementById("adminPassInput");
-    const loginErrorMsg = document.getElementById("loginErrorMsg");
+    document.getElementById("adminLoginBtn").addEventListener("click", tryLogin);
+    document.getElementById("adminPassInput").addEventListener("keydown", (e) => { if (e.key === "Enter") tryLogin(); });
+    document.getElementById("logoutBtn").addEventListener("click", () => { location.reload(); });
 
     function tryLogin() {
-        if (adminPassInput.value === ADMIN_PASSWORD) {
-            loginScreen.style.display = "none";
-            dashboard.style.display = "block";
-            connectAdminSocket();
+        if (document.getElementById("adminPassInput").value === ADMIN_PASSWORD) {
+            document.getElementById("loginScreen").style.display = "none";
+            document.getElementById("dashboard").style.display = "flex";
+            loadKeys(); // Fetch keys after login
         } else {
-            loginErrorMsg.style.display = "block";
+            document.getElementById("loginErrorMsg").style.display = "block";
         }
     }
 
-    document.getElementById("adminLoginBtn").addEventListener("click", tryLogin);
-    adminPassInput.addEventListener("keydown", (e) => { if (e.key === "Enter") tryLogin(); });
-
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-        dashboard.style.display = "none";
-        loginScreen.style.display = "flex";
-        adminPassInput.value = "";
-        loginErrorMsg.style.display = "none";
+    // Generate 6-Digit Key
+    document.getElementById("generateKeyBtn").addEventListener("click", () => {
+        let newKey = Math.floor(100000 + Math.random() * 900000).toString();
+        set(ref(db, 'support_keys/' + newKey), {
+            createdAt: serverTimestamp(),
+            status: 'active'
+        }).then(() => {
+            alert(`New Key Generated: ${newKey} \nWhatsApp/Call pe student ko ye key de do.`);
+        });
     });
 
-    // ========= 🆕 LIVE SUPPORT - Phase 2: real-time sessions + chat =========
-    const SOCKET_SERVER_URL = "https://livesupport-p9mo.onrender.com";
-    let adminSocket = null;
-    let activeSessions = {};   // sessionId -> { messages: [], unread: 0, time }
-    let currentOpenSession = null;
-
-    const requestsList = document.getElementById("requestsList");
-    const statRequests = document.getElementById("statRequests");
-    const statWaiting = document.getElementById("statWaiting");
-    const adminChatOverlay = document.getElementById("adminChatOverlay");
-    const achatMessages = document.getElementById("achatMessages");
-    const achatSessionTitle = document.getElementById("achatSessionTitle");
-
-    function connectAdminSocket() {
-        if (adminSocket) return;
-        adminSocket = io(SOCKET_SERVER_URL);
-
-        adminSocket.on("connect", () => {
-            adminSocket.emit("register_admin");
-        });
-
-        adminSocket.on("new_session", (data) => {
-            if (!activeSessions[data.sessionId]) {
-                activeSessions[data.sessionId] = { messages: [], unread: 0, time: data.time };
-                renderRequestsList();
-            }
-        });
-
-        adminSocket.on("chat_message", (data) => {
-            if (!activeSessions[data.sessionId]) {
-                activeSessions[data.sessionId] = { messages: [], unread: 0, time: data.time };
-            }
-            activeSessions[data.sessionId].messages.push(data);
-            if (data.sender === "student" && currentOpenSession !== data.sessionId) {
-                activeSessions[data.sessionId].unread++;
-            }
-            renderRequestsList();
-            if (currentOpenSession === data.sessionId) renderChatOverlay(data.sessionId);
-        });
-
-        adminSocket.on("session_ended", (data) => {
-            delete activeSessions[data.sessionId];
-            renderRequestsList();
-            if (currentOpenSession === data.sessionId) {
-                currentOpenSession = null;
-                adminChatOverlay.classList.remove("open");
+    // Load Active Keys in Sidebar
+    function loadKeys() {
+        onValue(ref(db, 'support_keys'), (snapshot) => {
+            const keysList = document.getElementById("keysList");
+            keysList.innerHTML = "";
+            const data = snapshot.val();
+            
+            if (data) {
+                // Sort keys roughly by making them an array
+                Object.keys(data).reverse().forEach(key => {
+                    let div = document.createElement("div");
+                    div.className = `key-item ${currentKey === key ? 'active' : ''}`;
+                    div.innerHTML = `<i class="fas fa-hashtag"></i> ${key}`;
+                    div.onclick = () => openChat(key);
+                    keysList.appendChild(div);
+                });
+            } else {
+                keysList.innerHTML = `<p style="text-align:center; color:#94a3b8; margin-top:20px;">No keys generated yet.</p>`;
             }
         });
     }
 
-    function renderRequestsList() {
-        const ids = Object.keys(activeSessions);
-        statRequests.textContent = ids.length;
-        statWaiting.textContent = ids.filter(id => activeSessions[id].messages.length === 0).length;
+    // Open Chat for a specific key
+    let chatListener = null;
+    function openChat(key) {
+        currentKey = key;
+        document.getElementById("chatHeader").innerHTML = `<span><i class="fas fa-hashtag"></i> Key: ${key}</span>`;
+        document.getElementById("chatInputArea").style.display = "flex";
+        document.getElementById("adminMsgInput").focus();
+        
+        // Update active class in sidebar
+        document.querySelectorAll(".key-item").forEach(el => el.classList.remove("active"));
+        event.currentTarget.classList.add("active");
 
-        if (ids.length === 0) {
-            requestsList.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-inbox"></i>
-                    Abhi koi active chat/call request nahi hai.<br>
-                    <small>Koi student "Message" bhejega to yahan turant dikhega</small>
-                </div>`;
-            return;
+        const msgBox = document.getElementById("chatMessages");
+        msgBox.innerHTML = "";
+
+        // Listen for real-time messages
+        onValue(ref(db, 'messages/' + key), (snapshot) => {
+            msgBox.innerHTML = "";
+            const msgs = snapshot.val();
+            if(msgs) {
+                Object.values(msgs).forEach(m => {
+                    let time = new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    let isAdmin = m.sender === 'admin';
+                    msgBox.innerHTML += `
+                        <div class="msg ${isAdmin ? 'msg-admin' : 'msg-student'}">
+                            ${m.text}
+                            <span class="msg-time">${time}</span>
+                        </div>`;
+                });
+                msgBox.scrollTop = msgBox.scrollHeight;
+            } else {
+                 msgBox.innerHTML = `<div class="empty-chat"><p>Abhi tak koi message nahi aaya.</p></div>`;
+            }
+        });
+    }
+
+    // Send Message
+    function sendMessage() {
+        let input = document.getElementById("adminMsgInput");
+        let text = input.value.trim();
+        if (text !== "" && currentKey) {
+            push(ref(db, 'messages/' + currentKey), {
+                sender: 'admin',
+                text: text,
+                timestamp: Date.now() // Firebase serverTimestamp() can't be used instantly for local rendering tricks sometimes, Date.now() is safer for chat UI
+            });
+            input.value = "";
         }
-
-        requestsList.innerHTML = ids.map(id => {
-            const s = activeSessions[id];
-            const last = s.messages.length ? s.messages[s.messages.length - 1].text : "Naya request - abhi koi message nahi";
-            return `
-                <div class="session-card" data-session="${id}">
-                    <div class="sc-info">
-                        <div class="sc-id"><i class="fas fa-user-circle"></i> ${id}</div>
-                        <div class="sc-preview">${last}</div>
-                    </div>
-                    ${s.unread > 0 ? `<div class="sc-unread">${s.unread}</div>` : ""}
-                </div>`;
-        }).join("");
-
-        document.querySelectorAll(".session-card").forEach(card => {
-            card.addEventListener("click", () => openChatOverlay(card.getAttribute("data-session")));
-        });
     }
 
-    function openChatOverlay(sessionId) {
-        currentOpenSession = sessionId;
-        if (activeSessions[sessionId]) activeSessions[sessionId].unread = 0;
-        renderRequestsList();
-        renderChatOverlay(sessionId);
-        adminChatOverlay.classList.add("open");
-    }
-
-    function renderChatOverlay(sessionId) {
-        achatSessionTitle.innerHTML = `<i class="fas fa-comment-dots"></i> ${sessionId}`;
-        const msgs = activeSessions[sessionId] ? activeSessions[sessionId].messages : [];
-        achatMessages.innerHTML = msgs.map(m =>
-            `<div class="achat-bubble ${m.sender}">${m.text}</div>`
-        ).join("");
-        achatMessages.scrollTop = achatMessages.scrollHeight;
-    }
-
-    function sendAdminReply() {
-        const input = document.getElementById("achatInput");
-        const text = input.value.trim();
-        if (!text || !currentOpenSession || !adminSocket) return;
-
-        adminSocket.emit("admin_message", { sessionId: currentOpenSession, text });
-
-        // Apna bheja hua message turant local screen pe bhi dikhao
-        if (!activeSessions[currentOpenSession]) {
-            activeSessions[currentOpenSession] = { messages: [], unread: 0, time: new Date().toISOString() };
-        }
-        activeSessions[currentOpenSession].messages.push({
-            sessionId: currentOpenSession,
-            text,
-            sender: "admin",
-            time: new Date().toISOString()
-        });
-        renderChatOverlay(currentOpenSession);
-        renderRequestsList();
-
-        input.value = "";
-    }
-
-    document.getElementById("achatSendBtn").addEventListener("click", sendAdminReply);
-    document.getElementById("achatInput").addEventListener("keydown", (e) => { if (e.key === "Enter") sendAdminReply(); });
-    document.getElementById("achatCloseBtn").addEventListener("click", () => {
-        adminChatOverlay.classList.remove("open");
-        currentOpenSession = null;
-    });
-
-    // ========= END LIVE SUPPORT Phase 2 =========
+    document.getElementById("adminSendBtn").addEventListener("click", sendMessage);
+    document.getElementById("adminMsgInput").addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
 </script>
 </body>
 </html>
