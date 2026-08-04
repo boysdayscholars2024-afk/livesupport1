@@ -1293,7 +1293,7 @@
     loadData(); 
 </script>
 
-<!-- 🆕 Firebase Live Support Logic with Presence -->
+<!-- 🆕 Firebase Live Support Logic (Updated to auto-logout on X) -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getDatabase, ref, get, push, onValue, update, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
@@ -1320,10 +1320,28 @@
         }
     });
 
+    // 🔒 Update: Logout logic on clicking 'X'
     document.getElementById("lsCloseBtn").addEventListener("click", () => { 
         document.getElementById("lsPanel").style.display = "none"; 
+        
         if(activeSessionKey) {
+            // 1. Status ko offline mark karo
             update(ref(db, 'support_keys/' + activeSessionKey), { student_status: 'offline', student_typing: false });
+            
+            // 2. Chat history screen se clear karo
+            document.getElementById("studentChatMessages").innerHTML = "";
+            document.getElementById("studentKeyInput").value = "";
+            
+            // 3. UI wapas "Key Daalo" wale page par switch karo
+            document.getElementById("lsChatArea").style.display = "none";
+            document.getElementById("adminStatusDisplay").style.display = "none";
+            document.getElementById("lsKeyEntryArea").style.display = "block";
+            
+            // 4. Session destroy karo
+            activeSessionKey = null;
+            
+            // Notification toast show karo
+            showToast("Chat closed successfully.", "info");
         }
     });
 
