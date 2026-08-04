@@ -416,7 +416,7 @@
     </div>
 </div>
 
-<!-- 🆕 LIVE SUPPORT WIDGET (Firebase Chat with Presence) -->
+<!-- 🆕 LIVE SUPPORT WIDGET (Firebase Chat with Presence & Security) -->
 <div class="livesupport-fab" id="lsFabBtn" title="Live Support">
     <i class="fas fa-headset"></i>
 </div>
@@ -432,7 +432,10 @@
     
     <div class="ls-panel-body" id="lsKeyEntryArea">
         <p style="color: #94a3b8; font-size: 0.85rem; text-align: center; margin-bottom: 15px;">Enter your 6-digit access key provided by Admin to start secure chat.</p>
-        <input type="text" id="studentKeyInput" placeholder="Enter 6-digit key" style="width: 100%; padding: 12px; background: #334155; border: none; border-radius: 8px; color: white; text-align: center; font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 15px; outline: none;" maxlength="6">
+        
+        <!-- Updated Input for NO AUTOCOMPLETE & STRICT MANUAL ENTRY -->
+        <input type="text" id="studentKeyInput" placeholder="Enter 6-digit key" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="numeric" style="width: 100%; padding: 12px; background: #334155; border: none; border-radius: 8px; color: white; text-align: center; font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 15px; outline: none;" maxlength="6">
+        
         <button id="verifyKeyBtn" style="width: 100%; padding: 12px; background: #25D366; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer;">Start Chat</button>
         <p id="keyErrorMsg" style="color: #ef4444; font-size: 0.8rem; text-align: center; margin-top: 10px; display: none;">Invalid Key! Check again.</p>
     </div>
@@ -1293,7 +1296,7 @@
     loadData(); 
 </script>
 
-<!-- 🆕 Firebase Live Support Logic (Updated to auto-logout on X) -->
+<!-- 🆕 Firebase Live Support Logic (Updated to Strict Auto-Logout on X & No-Autocomplete) -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getDatabase, ref, get, push, onValue, update, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
@@ -1315,34 +1318,41 @@
 
     document.getElementById("lsFabBtn").addEventListener("click", () => { 
         document.getElementById("lsPanel").style.display = "block"; 
-        if(activeSessionKey) {
+        
+        // Agar session nahi hai to ensure karo input box properly dikhe
+        if(!activeSessionKey) {
+            document.getElementById("studentKeyInput").value = "";
+            document.getElementById("lsKeyEntryArea").style.display = "block";
+            document.getElementById("lsChatArea").style.display = "none";
+            document.getElementById("adminStatusDisplay").style.display = "none";
+            document.getElementById("studentKeyInput").focus();
+        } else {
             update(ref(db, 'support_keys/' + activeSessionKey), { student_status: 'online' });
         }
     });
 
-    // 🔒 Update: Logout logic on clicking 'X'
+    // 🔒 Update: STRICT Logout logic on clicking 'X'
     document.getElementById("lsCloseBtn").addEventListener("click", () => { 
         document.getElementById("lsPanel").style.display = "none"; 
         
         if(activeSessionKey) {
-            // 1. Status ko offline mark karo
+            // 1. Firebase par turant offline mark karo
             update(ref(db, 'support_keys/' + activeSessionKey), { student_status: 'offline', student_typing: false });
             
-            // 2. Chat history screen se clear karo
-            document.getElementById("studentChatMessages").innerHTML = "";
-            document.getElementById("studentKeyInput").value = "";
-            
-            // 3. UI wapas "Key Daalo" wale page par switch karo
-            document.getElementById("lsChatArea").style.display = "none";
-            document.getElementById("adminStatusDisplay").style.display = "none";
-            document.getElementById("lsKeyEntryArea").style.display = "block";
-            
-            // 4. Session destroy karo
+            // 2. Active Session delete karo
             activeSessionKey = null;
-            
-            // Notification toast show karo
-            showToast("Chat closed successfully.", "info");
         }
+
+        // 3. UI Jabardasti Reset (Chahe key valid daali ho ya nahi)
+        document.getElementById("studentChatMessages").innerHTML = "";
+        document.getElementById("studentKeyInput").value = ""; 
+        document.getElementById("studentMsgInput").value = ""; 
+        document.getElementById("lsChatArea").style.display = "none";
+        document.getElementById("adminStatusDisplay").style.display = "none";
+        document.getElementById("keyErrorMsg").style.display = "none";
+        
+        // Key entry panel dobara dikhne ke liye set karo
+        document.getElementById("lsKeyEntryArea").style.display = "block";
     });
 
     document.getElementById("verifyKeyBtn").addEventListener("click", async () => {
@@ -1358,7 +1368,10 @@
             document.getElementById("lsChatArea").style.display = "flex";
             document.getElementById("adminStatusDisplay").style.display = "block";
             loadStudentChat(key);
-        } else { errorMsg.style.display = "block"; }
+        } else { 
+            errorMsg.style.display = "block"; 
+            document.getElementById("studentKeyInput").value = ""; // Galt key daalne par clear kar do
+        }
     });
 
     function loadStudentChat(key) {
