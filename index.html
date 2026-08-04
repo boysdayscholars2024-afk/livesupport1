@@ -210,6 +210,51 @@
 
         /* FOOTER WITH VISITOR BADGE STYLE */
         .site-footer { margin-top: 2rem; background: #0f172a; text-align: center; padding: 1.2rem 1rem; border-radius: 8px; color: #94a3b8; border-top: 2px solid #f97316; font-size: 0.85rem; }
+
+        /* ========= 🆕 LIVE SUPPORT WIDGET (Phase 1: UI only) ========= */
+        .livesupport-fab {
+            position: fixed; bottom: 22px; right: 22px; width: 58px; height: 58px;
+            border-radius: 50%; background: linear-gradient(145deg, #25D366, #1ebe57);
+            display: flex; align-items: center; justify-content: center; color: white;
+            font-size: 1.6rem; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+            z-index: 9000; transition: transform 0.2s;
+        }
+        .livesupport-fab:hover { transform: scale(1.08); }
+        .livesupport-fab .ls-fab-badge {
+            position: absolute; top: -4px; right: -4px; background: #ef4444; color: white;
+            font-size: 0.65rem; font-weight: bold; width: 18px; height: 18px; border-radius: 50%;
+            display: none; align-items: center; justify-content: center; border: 2px solid #128C7E;
+        }
+        .livesupport-panel {
+            position: fixed; bottom: 95px; right: 22px; width: 320px; max-width: calc(100vw - 40px);
+            background: #1e293b; border-radius: 14px; box-shadow: 0 15px 40px rgba(0,0,0,0.45);
+            z-index: 9001; display: none; overflow: hidden; border: 1px solid #334155;
+        }
+        .livesupport-panel.open { display: block; animation: lsSlideUp 0.25s ease; }
+        @keyframes lsSlideUp { from { opacity:0; transform: translateY(15px); } to { opacity:1; transform: translateY(0); } }
+        .ls-panel-header {
+            background: linear-gradient(135deg, #128C7E, #075E54); padding: 14px 16px;
+            display: flex; align-items: center; justify-content: space-between; color: white;
+        }
+        .ls-panel-header h4 { font-size: 1rem; font-weight: 800; display:flex; align-items:center; gap:8px; }
+        .ls-panel-header i.ls-close { cursor: pointer; opacity: 0.85; font-size: 1.1rem; }
+        .ls-panel-header i.ls-close:hover { opacity: 1; }
+        .ls-panel-body { padding: 18px 16px; display: flex; flex-direction: column; gap: 12px; }
+        .ls-option-btn {
+            display: flex; align-items: center; gap: 12px; background: #334155; border: none; color: white;
+            padding: 12px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.92rem;
+            transition: 0.2s; width: 100%; text-align: left;
+        }
+        .ls-option-btn:hover { background: #3f4c63; transform: translateX(3px); }
+        .ls-option-btn i { font-size: 1.15rem; width: 24px; text-align: center; }
+        .ls-option-btn.ls-msg i { color: #25D366; }
+        .ls-option-btn.ls-voice i { color: #3b82f6; }
+        .ls-option-btn.ls-video i { color: #f97316; }
+        .ls-panel-empty { color: #94a3b8; text-align: center; padding: 20px 10px; font-size: 0.88rem; }
+        @media (max-width: 480px) {
+            .livesupport-panel { right: 14px; bottom: 88px; }
+            .livesupport-fab { right: 14px; bottom: 16px; }
+        }
     </style>
 </head>
 <body>
@@ -426,6 +471,24 @@
             <button class="btn-primary" onclick="closeNotifications()" style="width: 50%; background: #475569;">Close</button>
             <button class="btn-primary" onclick="clearLocalNotifications()" style="width: 50%; background: #ef4444;"><i class="fas fa-trash-alt"></i> Clear All</button>
         </div>
+    </div>
+</div>
+
+<!-- 🆕 LIVE SUPPORT WIDGET (Phase 1: UI only, student/visitor side) -->
+<div class="livesupport-fab" id="lsFabBtn" title="Live Support">
+    <i class="fas fa-headset"></i>
+    <span class="ls-fab-badge" id="lsFabBadge">0</span>
+</div>
+
+<div class="livesupport-panel" id="lsPanel">
+    <div class="ls-panel-header">
+        <h4><i class="fas fa-headset"></i> Live Support</h4>
+        <i class="fas fa-times ls-close" id="lsCloseBtn"></i>
+    </div>
+    <div class="ls-panel-body" id="lsPanelBody">
+        <button class="ls-option-btn ls-msg" id="lsMsgBtn"><i class="fas fa-comment-dots"></i> Message</button>
+        <button class="ls-option-btn ls-voice" id="lsVoiceBtn"><i class="fas fa-phone-alt"></i> Voice Call</button>
+        <button class="ls-option-btn ls-video" id="lsVideoBtn"><i class="fas fa-video"></i> Video Call</button>
     </div>
 </div>
 
@@ -1412,6 +1475,23 @@
     
     document.getElementById("addChapterAdminBtn").addEventListener("click", addChapter);
     document.getElementById("createSectionBtn").addEventListener("click", createNewSection);
+    
+    // ========= 🆕 LIVE SUPPORT WIDGET (Phase 1: UI only, no backend yet) =========
+    const lsFabBtn = document.getElementById("lsFabBtn");
+    const lsPanel = document.getElementById("lsPanel");
+    const lsCloseBtn = document.getElementById("lsCloseBtn");
+
+    function toggleLiveSupportPanel() {
+        lsPanel.classList.toggle("open");
+    }
+
+    lsFabBtn.addEventListener("click", toggleLiveSupportPanel);
+    lsCloseBtn.addEventListener("click", () => lsPanel.classList.remove("open"));
+
+    document.getElementById("lsMsgBtn").addEventListener("click", () => showToast("Message feature Phase 2 me active hoga!", "info"));
+    document.getElementById("lsVoiceBtn").addEventListener("click", () => showToast("Voice Call feature Phase 4 me active hoga!", "info"));
+    document.getElementById("lsVideoBtn").addEventListener("click", () => showToast("Video Call feature Phase 5 me active hoga!", "info"));
+    // ========= END LIVE SUPPORT WIDGET (Phase 1) =========
     
     loadData(); 
 </script>
