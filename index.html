@@ -6,6 +6,7 @@
     <title>Study Notes Manager | लाइव ऐप</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: linear-gradient(135deg, #fff3e0 0%, #ffe6c7 100%); min-height: 100vh; padding: 1.5rem 1rem; }
@@ -255,6 +256,32 @@
             .livesupport-panel { right: 14px; bottom: 88px; }
             .livesupport-fab { right: 14px; bottom: 16px; }
         }
+
+        /* ========= 🆕 LIVE SUPPORT CHAT WINDOW (Phase 2) ========= */
+        .ls-back-btn { cursor: pointer; opacity: 0.85; font-size: 1rem; margin-right: 6px; }
+        .ls-back-btn:hover { opacity: 1; }
+        .ls-chat-messages {
+            height: 320px; overflow-y: auto; padding: 14px 16px; display: flex;
+            flex-direction: column; gap: 8px; background: #0f172a;
+        }
+        .ls-msg-bubble {
+            max-width: 78%; padding: 8px 12px; border-radius: 10px; font-size: 0.88rem;
+            line-height: 1.35; word-break: break-word;
+        }
+        .ls-msg-bubble.student { align-self: flex-end; background: #25D366; color: #05230f; border-bottom-right-radius: 3px; }
+        .ls-msg-bubble.admin { align-self: flex-start; background: #334155; color: white; border-bottom-left-radius: 3px; }
+        .ls-msg-bubble.system { align-self: center; background: transparent; color: #94a3b8; font-size: 0.78rem; text-align: center; }
+        .ls-chat-input-row { display: flex; gap: 8px; padding: 12px 14px; background: #1e293b; border-top: 1px solid #334155; }
+        .ls-chat-input-row input {
+            flex: 1; background: #334155; border: none; border-radius: 20px; padding: 10px 14px;
+            color: white; outline: none; font-size: 0.88rem;
+        }
+        .ls-chat-input-row button {
+            background: #25D366; border: none; width: 40px; height: 40px; border-radius: 50%;
+            color: white; cursor: pointer; font-size: 0.95rem; flex-shrink: 0;
+        }
+        .ls-chat-input-row button:hover { background: #1ebe57; }
+        .ls-connecting { text-align: center; color: #94a3b8; padding: 40px 10px; font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -482,8 +509,11 @@
 
 <div class="livesupport-panel" id="lsPanel">
     <div class="ls-panel-header">
-        <h4><i class="fas fa-headset"></i> Live Support</h4>
-        <i class="fas fa-times ls-close" id="lsCloseBtn"></i>
+        <h4 id="lsPanelTitle"><i class="fas fa-headset"></i> Live Support</h4>
+        <div>
+            <i class="fas fa-arrow-left ls-back-btn" id="lsBackBtn" style="display:none;"></i>
+            <i class="fas fa-times ls-close" id="lsCloseBtn"></i>
+        </div>
     </div>
     <div class="ls-panel-body" id="lsPanelBody">
         <button class="ls-option-btn ls-msg" id="lsMsgBtn"><i class="fas fa-comment-dots"></i> Message</button>
@@ -1476,22 +1506,107 @@
     document.getElementById("addChapterAdminBtn").addEventListener("click", addChapter);
     document.getElementById("createSectionBtn").addEventListener("click", createNewSection);
     
-    // ========= 🆕 LIVE SUPPORT WIDGET (Phase 1: UI only, no backend yet) =========
+    // ========= 🆕 LIVE SUPPORT WIDGET (Phase 2: real-time text chat) =========
+    const SOCKET_SERVER_URL = "https://livesupport-p9mo.onrender.com";
+
     const lsFabBtn = document.getElementById("lsFabBtn");
     const lsPanel = document.getElementById("lsPanel");
+    const lsPanelBody = document.getElementById("lsPanelBody");
+    const lsPanelTitle = document.getElementById("lsPanelTitle");
     const lsCloseBtn = document.getElementById("lsCloseBtn");
+    const lsBackBtn = document.getElementById("lsBackBtn");
+
+    let lsSocket = null;
+    let lsSessionId = null;
+
+    function lsGenSessionId() {
+        return "S-" + Math.random().toString(36).substring(2, 8).toUpperCase() + Date.now().toString(36).slice(-3).toUpperCase();
+    }
+
+    function lsConnectSocket() {
+        if (lsSocket) return;
+        lsSocket = io(SOCKET_SERVER_URL);
+        lsSocket.on("chat_message", (data) => {
+            if (data.sessionId === lsSessionId && data.sender === "admin") {
+                lsAppendMessage(data.text, "admin");
+            }
+        });
+    }
+
+    function lsShowMenu() {
+        lsPanelTitle.innerHTML = `<i class="fas fa-headset"></i> Live Support`;
+        lsBackBtn.style.display = "none";
+        lsPanelBody.innerHTML = `
+            <button class="ls-option-btn ls-msg" id="lsMsgBtn"><i class="fas fa-comment-dots"></i> Message</button>
+            <button class="ls-option-btn ls-voice" id="lsVoiceBtn"><i class="fas fa-phone-alt"></i> Voice Call</button>
+            <button class="ls-option-btn ls-video" id="lsVideoBtn"><i class="fas fa-video"></i> Video Call</button>
+        `;
+        document.getElementById("lsMsgBtn").addEventListener("click", lsStartChat);
+        document.getElementById("lsVoiceBtn").addEventListener("click", () => showToast("Voice Call feature Phase 4 me active hoga!", "info"));
+        document.getElementById("lsVideoBtn").addEventListener("click", () => showToast("Video Call feature Phase 5 me active hoga!", "info"));
+    }
+
+    function lsStartChat() {
+        lsSessionId = lsGenSessionId();
+        lsConnectSocket();
+        lsSocket.emit("student_join", { sessionId: lsSessionId });
+
+        lsPanelTitle.innerHTML = `<i class="fas fa-comment-dots"></i> Live Chat`;
+        lsBackBtn.style.display = "inline-block";
+        lsPanelBody.innerHTML = `
+            <div class="ls-chat-messages" id="lsChatMessages">
+                <div class="ls-msg-bubble system">Aap Live Support se connect ho gaye hain</div>
+            </div>
+            <div class="ls-chat-input-row">
+                <input type="text" id="lsChatInput" placeholder="Apna message likhein...">
+                <button id="lsSendBtn"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        `;
+        document.getElementById("lsSendBtn").addEventListener("click", lsSendMessage);
+        document.getElementById("lsChatInput").addEventListener("keydown", (e) => { if (e.key === "Enter") lsSendMessage(); });
+        document.getElementById("lsChatInput").focus();
+    }
+
+    function lsSendMessage() {
+        const input = document.getElementById("lsChatInput");
+        const text = input.value.trim();
+        if (!text || !lsSocket) return;
+        lsSocket.emit("student_message", { sessionId: lsSessionId, text });
+        lsAppendMessage(text, "student");
+        input.value = "";
+    }
+
+    function lsAppendMessage(text, sender) {
+        const container = document.getElementById("lsChatMessages");
+        if (!container) return;
+        const bubble = document.createElement("div");
+        bubble.className = `ls-msg-bubble ${sender}`;
+        bubble.textContent = text;
+        container.appendChild(bubble);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function lsEndChatIfActive() {
+        if (lsSocket && lsSessionId) {
+            lsSocket.emit("student_end_chat", { sessionId: lsSessionId });
+        }
+        lsSessionId = null;
+    }
 
     function toggleLiveSupportPanel() {
-        lsPanel.classList.toggle("open");
+        const isOpen = lsPanel.classList.contains("open");
+        if (isOpen) {
+            lsPanel.classList.remove("open");
+        } else {
+            lsShowMenu();
+            lsPanel.classList.add("open");
+        }
     }
 
     lsFabBtn.addEventListener("click", toggleLiveSupportPanel);
     lsCloseBtn.addEventListener("click", () => lsPanel.classList.remove("open"));
-
-    document.getElementById("lsMsgBtn").addEventListener("click", () => showToast("Message feature Phase 2 me active hoga!", "info"));
-    document.getElementById("lsVoiceBtn").addEventListener("click", () => showToast("Voice Call feature Phase 4 me active hoga!", "info"));
-    document.getElementById("lsVideoBtn").addEventListener("click", () => showToast("Video Call feature Phase 5 me active hoga!", "info"));
-    // ========= END LIVE SUPPORT WIDGET (Phase 1) =========
+    lsBackBtn.addEventListener("click", () => { lsEndChatIfActive(); lsShowMenu(); });
+    // ========= END LIVE SUPPORT WIDGET (Phase 2) =========
     
     loadData(); 
 </script>
