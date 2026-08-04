@@ -288,7 +288,22 @@
         const input = document.getElementById("achatInput");
         const text = input.value.trim();
         if (!text || !currentOpenSession || !adminSocket) return;
+
         adminSocket.emit("admin_message", { sessionId: currentOpenSession, text });
+
+        // Apna bheja hua message turant local screen pe bhi dikhao
+        if (!activeSessions[currentOpenSession]) {
+            activeSessions[currentOpenSession] = { messages: [], unread: 0, time: new Date().toISOString() };
+        }
+        activeSessions[currentOpenSession].messages.push({
+            sessionId: currentOpenSession,
+            text,
+            sender: "admin",
+            time: new Date().toISOString()
+        });
+        renderChatOverlay(currentOpenSession);
+        renderRequestsList();
+
         input.value = "";
     }
 
